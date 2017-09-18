@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page"
+     xmlns:c="http://java.sun.com/jsp/jstl/core"
+     xmlns:joda="http://www.joda.org/joda/time/tags">
+    
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+   
+    
+    <div style=" display:block; text-align:center; margin:0 auto; align-content: center; align-items: center; align-self: center">
+        <hl>Contact Listing</hl>
+            <br/><hr/><br/>
+
+        <div id="run" >
+            <table style=" margin-left: 44%">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Birth Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <c:forEach items="${contacts}" var="contact">
+                        <tr>
+                            <td>${contact.firstName}</td>
+                            <td>${contact.lastName}</td>
+                            <td><joda:format value="${contact.birthDate}" pattern="yyyy-MM-dd"/></td>
+                        </tr>
+                    </c:forEach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
