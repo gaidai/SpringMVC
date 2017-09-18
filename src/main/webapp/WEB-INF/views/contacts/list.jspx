@@ -12,7 +12,14 @@
     <spring:message code="label_contact_first_name" var="labelContactFirstName"/>
     <spring:message code="label_contact_last_name" var="labelContactLastName"/>
     <spring:message code="label_contact_birth_date" var="labelContactBirthDate"/>
-   <h1>${labelContactList}</h1>
+    <head>
+        <title>First page</title>
+        <spring:theme code="styleSheet" var="app_css" />
+        <spring:url value="/${app_css}" var="app_css_url" />
+        <link rel="stylesheet" type="text/css" media="screen"  href="${app_css_url}" />
+    </head>
+    
+    <h1>${labelContactList}</h1>
     
     <div style=" display:block; text-align:center; margin:0 auto; align-content: center; align-items: center; align-self: center">
         <h1>${labelContactList}</h1>
