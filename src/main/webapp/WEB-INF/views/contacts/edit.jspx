@@ -13,6 +13,13 @@
                 dateFormat: 'yy-mm-dd',
                 changeYear: true
             });
+
+            $("#contactDescription").ckeditor(
+                    {
+                        toolbar : 'Basic',
+                        uiColor : '#CCCCCC'
+                    }
+            );
         });
     </script>
 

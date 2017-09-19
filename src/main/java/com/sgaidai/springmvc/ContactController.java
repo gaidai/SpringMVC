@@ -1,6 +1,7 @@
 package com.sgaidai.springmvc;
 
 
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
 
@@ -18,6 +19,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 
 @RequestMapping("/contacts")
@@ -99,6 +105,53 @@ public class ContactController {
         uiModel.addAttribute("contact", contact);
 
         return "contacts/create";
+    }
+    
+    @ResponseBody
+    @RequestMapping(value = "/listgrid", method = RequestMethod.GET, produces="application/json")
+    public ContactGrid listGrid(@RequestParam(value = "page", required = false) Integer page,
+                                @RequestParam(value = "rows", required = false) Integer rows,
+                                @RequestParam(value = "sidx", required = false) String sortBy,
+                                @RequestParam(value = "sord", required = false) String order) {
+
+        logger.info("Listing contacts for grid with page: {}, rows: {}", page, rows);
+        logger.info("Listing contacts for grid with sort: {}, order: {}", sortBy, order);
+
+        // Process order by
+        Sort sort = null;
+        String orderBy = sortBy;
+        if (orderBy != null && orderBy.equals("birthDateString"))
+            orderBy = "birthDate";
+
+        if (orderBy != null && order != null) {
+            if (order.equals("desc")) {
+                sort = new Sort(Sort.Direction.DESC, orderBy);
+            } else
+                sort = new Sort(Sort.Direction.ASC, orderBy);
+        }
+
+        // Constructs page request for current page
+        // Note: page number for Spring Data JPA starts with 0, while jqGrid starts with 1
+        PageRequest pageRequest = null;
+
+        if (sort != null) {
+            pageRequest = new PageRequest(page - 1, rows, sort);
+        } else {
+            pageRequest = new PageRequest(page - 1, rows);
+        }
+
+        Page<Contact> contactPage = contactService.findAllByPage(pageRequest);
+
+        // Construct the grid data that will return as JSON data
+        ContactGrid contactGrid = new ContactGrid();
+
+        contactGrid.setCurrentPage(contactPage.getNumber() + 1);
+        contactGrid.setTotalPages(contactPage.getTotalPages());
+        contactGrid.setTotalRecords(contactPage.getTotalElements());
+
+        contactGrid.setContactData(Lists.newArrayList(contactPage.iterator()));
+
+        return contactGrid;
     }
     
     @Autowired
