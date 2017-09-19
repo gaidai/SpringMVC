@@ -2,9 +2,10 @@ package com.sgaidai.springmvc;
 
 
 import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +17,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.validation.Valid;
+import org.apache.commons.io.IOUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -56,7 +58,7 @@ public class ContactController {
     @RequestMapping(value = "/{id}", params = "form", method = RequestMethod.POST)
     public String update(@Valid Contact contact, BindingResult bindingResult, Model uiModel,
                          HttpServletRequest httpServletRequest, RedirectAttributes redirectAttributes,
-                         Locale locale) {
+                         Locale locale, @RequestParam(value="file", required=false) Part file) {
         logger.info("Updating contact");
         if (bindingResult.hasErrors()) {
             uiModel.addAttribute("message", new Message("error",
@@ -67,6 +69,22 @@ public class ContactController {
         uiModel.asMap().clear();
         redirectAttributes.addFlashAttribute("message", new Message("success",
                 messageSource.getMessage("contact_save_success", new Object[]{}, locale)));
+        if (file != null) {
+            logger.info("File name: " + file.getName());
+            logger.info("File size: " + file.getSize());
+            logger.info("File content type: " + file.getContentType());
+            byte[] fileContent = null;
+            try {
+                InputStream inputStream = file.getInputStream();
+                if (inputStream == null) logger.info("File inputstream is null");
+                fileContent = IOUtils.toByteArray(inputStream);
+                contact.setPhoto(fileContent);
+            } catch (IOException ex) {
+                logger.error("Error saving uploaded file");
+            }
+            contact.setPhoto(fileContent);
+        }
+        
         contactService.save(contact);
         return "redirect:/contacts/" + UrlUtil.encodeUrlPathSegment(contact.getId().toString(), httpServletRequest);
         
@@ -79,24 +97,53 @@ public class ContactController {
     }
     
     
-    @RequestMapping(params = "form", method = RequestMethod.POST)
-    public String create(@Valid Contact contact, BindingResult bindingResult,
-        Model uiModel, HttpServletRequest httpServletRequest,
-        RedirectAttributes redirectAttributes, Locale locale) {
+  @RequestMapping(method = RequestMethod.POST)
+    public String create(@Valid Contact contact, BindingResult bindingResult, Model uiModel, HttpServletRequest httpServletRequest, RedirectAttributes redirectAttributes, Locale locale, @RequestParam(value="file", required=false) Part file) {
         logger.info("Creating contact");
         if (bindingResult.hasErrors()) {
             uiModel.addAttribute("message", new Message("error",
-            messageSource.getMessage("contact_save_fail",
-            new Object[] {}, locale)));
+                    messageSource.getMessage("contact_save_fail", new Object[]{}, locale)));
             uiModel.addAttribute("contact", contact);
             return "contacts/create";
         }
         uiModel.asMap().clear();
-        redirectAttributes.addFlashAttribute("message",  new Message("success",
-            messageSource.getMessage("contact_save_success", new Object[] {}, locale)));
+        redirectAttributes.addFlashAttribute("message", new Message("success",
+                messageSource.getMessage("contact_save_success", new Object[]{}, locale)));
+
         logger.info("Contact id: " + contact.getId());
+
+        // Process upload file
+        if (file != null) {
+            logger.info("File name: " + file.getName());
+            logger.info("File size: " + file.getSize());
+            logger.info("File content type: " + file.getContentType());
+            byte[] fileContent = null;
+            try {
+                InputStream inputStream = file.getInputStream();
+                if (inputStream == null) logger.info("File inputstream is null");
+                fileContent = IOUtils.toByteArray(inputStream);
+                contact.setPhoto(fileContent);
+            } catch (IOException ex) {
+                logger.error("Error saving uploaded file");
+            }
+            contact.setPhoto(fileContent);
+        }
+
         contactService.save(contact);
         return "redirect:/contacts/";
+    }
+
+    @RequestMapping(value = "/photo/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public byte[] downloadPhoto(@PathVariable("id") Long id) {
+        Contact contact = contactService.findById(id);
+
+        if (contact.getPhoto() != null) {
+            logger.info("Downloading photo for id: {} with size: {}", contact.getId(),
+                    contact.getPhoto().length);
+        }
+
+        return contact.getPhoto();
     }
     
     @RequestMapping(params = "form", method = RequestMethod.GET)
