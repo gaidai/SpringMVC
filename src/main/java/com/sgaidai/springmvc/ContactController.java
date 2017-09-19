@@ -74,7 +74,7 @@ public class ContactController {
     
     
     @RequestMapping(params = "form", method = RequestMethod.POST)
-    public String create(Contact contact, BindingResult bindingResult,
+    public String create(@Valid Contact contact, BindingResult bindingResult,
         Model uiModel, HttpServletRequest httpServletRequest,
         RedirectAttributes redirectAttributes, Locale locale) {
         logger.info("Creating contact");

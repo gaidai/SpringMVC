@@ -13,7 +13,7 @@
             http://www.springframework.org/schema/security
             http://www.springframework.org/schema/security/spring-security.xsd">
 
-    <annotation-driven />
+    <annotation-driven validator="validator"/>
     <default-servlet-handler/>
 
     <resources location="/, classpath:/META-INF/web-resources/" mapping="/resources/**"/>
@@ -31,6 +31,10 @@
                 <beans:value>/WEB-INF/views/**/views.xml</beans:value>
             </beans:list>
         </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <beans:property name="validationMessageSource" ref="messageSource"/>
     </beans:bean>
     
 
